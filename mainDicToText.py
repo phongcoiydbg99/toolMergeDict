@@ -48,10 +48,10 @@ def _get_probability_v2():
     UNIGRAM_DICT = readFile._read_dic_to_json('/media/phongnve/HDD/source_bkav/dictionary/unigram_json.txt')
     readFile._get_probability(UNIGRAM_DICT)
 
-def _split_file_dic_csv():
+def _split_file_dic_csv(fol,name,k):
     i = 0
-    for chunk in pd.read_csv('/media/phongnve/HDD/source_bkav/dict_csv/main/main_dict.csv', chunksize= chunkSize):
-        chunk.to_csv('/media/phongnve/HDD/source_bkav/dict_csv/main/main/main_dict_{}.csv'.format(i), index=False, header=False)
+    for chunk in pd.read_csv('/media/phongnve/HDD/source_bkav/dict_csv/main/main/main_dict_{}.csv'.format(k), chunksize= 10000):
+        chunk.to_csv("/media/phongnve/HDD/source_bkav/dict_csv/main/main/" +fol + "/" + name+"_{}.csv".format(i), index=False, header=False)
         i = i + 1
 
 def _merge_dic_to_csv_v2(ngram, isUnigram):
@@ -171,7 +171,7 @@ def _get_counter_v3():
     chunk = pd.read_csv(filePath, names=col_Names)
     # chunk.set_index('key', inplace=True)
     filter_count = (chunk['count'] >= 0) & (chunk['type'] == 0)
-    chunk.loc[filter_count,'count'] = chunk.loc[filter_count,'count'] + chunk.loc[filter_count,'count']*(1+ chunk.loc[filter_count,'count'])/2
+    # chunk.loc[filter_count,'count'] = chunk.loc[filter_count,'count'] + chunk.loc[filter_count,'count']*(1+ chunk.loc[filter_count,'count'])/2
     result = result + chunk.loc[filter_count,'count'].sum()
     return int(result)
 
@@ -196,19 +196,34 @@ def _halve_counter():
         max_value = column.max()
         i_max_value = column.argmax()
 
-def _find_count(s, dic , chunk):
+def _find_count(s, dic , k):
     if s == "":
         s = "0"
     print(s)
+    if len(dic) >= 100000:
+        dic = {}
     if s in dic:
         return dic[s]
-    col_Names=['key','type','prev_array','count','f']
-    filter_count = (chunk['key'] == s)
-    try:
-        dk = chunk.loc[filter_count]
-        result = int(dk['count'])
-    except:
-        result = -1
+    if k == 0:
+        fol = "uni"
+    if k == 1:
+        fol = "bi"
+    if k == 2:
+        fol = "tri"
+    filePath = pathDic + "/" + fol
+    for file in os.listdir(filePath):
+        col_names=['key','type','prev_array','count','f']
+        filepath = filePath + "/" + file
+        chunk = pd.read_csv(filepath, names=col_names, low_memory=False)
+        chunk.set_index('key')
+        chunk = chunk.fillna("")
+        filter_count = (chunk['key'] == s)
+        try:
+            dk = chunk.loc[filter_count]
+            result = int(dk['count'])
+            break
+        except:
+            result = -1
     if s not in dic:
         dic[s] = result
     return result
@@ -218,7 +233,7 @@ def _float_to_int(s):
     #     return -1
     return int(s)
 
-def _get_probability_v3(file,k):
+def _get_probability_v3(file,k,fol):
     if k == -1:
         globalCounters = _get_counter_v3()
         print(globalCounters)
@@ -232,17 +247,12 @@ def _get_probability_v3(file,k):
         chunkDic.to_csv(filePathDic, mode="w", header=False)
     else:
         dic = {}
-        filePath = pathDic + "/main_dict_{}.csv".format(k)
-        filePathDic = pathDic + "/" + file
-        print(filePath)
+        filePathDic = pathDic + "/" + fol +"/"+ file
         col_Names=['key','type','prev_array','count','f']
-        chunk = pd.read_csv(filePath, names=col_Names, low_memory=False)
         chunkDic = pd.read_csv(filePathDic, names=col_Names, low_memory=False)
-        chunk.set_index('key')
         chunkDic.set_index('key')
-        chunk = chunk.fillna("")
         chunkDic = chunkDic.fillna("")
-        chunkDic["f"] = chunkDic.apply(lambda x: readFile._calculate_robability(_float_to_int(x['type']),_find_count(x['prev_array'], dic, chunk),x['count']), axis=1)
+        chunkDic["f"] = chunkDic.apply(lambda x: readFile._calculate_robability(_float_to_int(x['type']),_find_count(x['prev_array'], dic, k),x['count']), axis=1)
         chunkDic.to_csv(filePathDic, mode="w", header=False)
 
 def _main_v3(s):
@@ -269,6 +279,18 @@ def _first_run_v2():
     _merge_dic_to_csv_v2(readFile.unigramDict, True)
     _merge_dic_to_csv_v2(readFile.ngramDict, False)
 
+def _dic_to_n_text():
+    constants = [0,1,2,3]
+    col = ['key','type','prev_array','count','f']
+    for i in constants:
+        iter_csv = pd.read_csv("/media/phongnve/HDD/source_bkav/dict_csv/main/main_dict_current.csv", names=col, chunksize=1000000)
+        # iter_csv = pd.read_csv(io.StringIO(temp), delimiter=",", chunksize=10)
+        #concat subset with rows id == constant
+        df = pd.concat([chunk[chunk['type'] == i] for chunk in iter_csv])
+        #your groupby function
+        # data = df.reset_index(drop=True).groupby(["id","col1"], as_index=False).sum()
+        df.to_csv ("/media/phongnve/HDD/source_bkav/dict_csv/main/main_dict_current_{}.csv".format(i), index=None, header=False)
+
 def _tool_v3():
     for x in range(15,20):
         if x <= 9:
@@ -278,18 +300,19 @@ def _tool_v3():
         print(s)
         _main_v3(s)
 
-def _dic_to_n_text():
-    constants = [0,1,2,3]
-    col = ['key','type','prev_array','count','f']
-    for i in constants:
-        iter_csv = pd.read_csv("/media/phongnve/HDD/source_bkav/dict_csv/main/main_dict.csv", names=col, chunksize=1000000)
-        # iter_csv = pd.read_csv(io.StringIO(temp), delimiter=",", chunksize=10)
-        #concat subset with rows id == constant
-        df = pd.concat([chunk[chunk['type'] == i] for chunk in iter_csv])
-        #your groupby function
-        # data = df.reset_index(drop=True).groupby(["id","col1"], as_index=False).sum()
-        df.to_csv ("/media/phongnve/HDD/source_bkav/dict_csv/main/main_dict_{}.csv".format(i), index=None, header=False)
+def _get_pro(fol, k):
+    threads = []
+    filePath = pathDic + "/" + fol
+    for file in os.listdir(filePath):
+        # _get_probability_v3("main_dict_1.csv",0)
+        print(file)
+        t = Thread(target=_get_probability_v3, args=(file,k,fol,))
+        t.start()
+        threads.append(t)
 
+    # Wait all threads to finish.
+    for t in threads:
+        t.join()
 # _tool_v2()
 # _get_probability_v2()
 # readFile._file_to_csv('text.txt',"text")
@@ -301,22 +324,22 @@ def _dic_to_n_text():
 # print(_find_count("Có nên"))
 
 # tool dic to text
-# print("tool dic to text")
-# _dic_to_n_text()
-# _split_file_dic_csv()
+print("tool dic to text")
+_dic_to_n_text()
+# _split_file_dic_csv("bi","main_dict_bi",1)
+# _split_file_dic_csv("tri","main_dict_tri",2)
+# _split_file_dic_csv("quad","main_dict_quad",3)
 # _halve_counter()
 # _get_probability_v3("main_dict_0.csv",-1)
-# _get_probability_v3("main_dict_1.csv",0)
 # _get_probability_v3("main_dict_2.csv",1)
 # _get_probability_v3("main_dict_3.csv",2)
+# Tinh diem bigram
+# _get_pro("bi",0)
+# Tinh diem trigram
+# _get_pro("tri",1)
+# Tinh diem quadgram
+# _get_pro("quad",2)
 # writeFile._dic_to_text('/media/phongnve/HDD/source_bkav/dict_csv/main/main')
 
-# col = ['key','type','prev_array','count','f']
-# chunk = pd.read_csv("/media/phongnve/HDD/source_bkav/backup/test_dic_csv.csv", names=col)
-# chunk2 = pd.read_csv("/media/phongnve/HDD/source_bkav/backup/test_dic_csv_0.csv", names=col)
-# for i in range(1,6):
-#     print(chunk.loc[:,'key'])
-#     print(chunk)
-#     print(chunk2)
 
 
