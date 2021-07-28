@@ -4,11 +4,12 @@ import pandas as pd
 import readFile
 import time
 
-folder = "022021"
+folder = "032021"
 file = "11112020"
 path = "/media/phongnve/HDD/Guide/DictTool_0.2/DictTool/file/test/DicText/"+folder+"/"
 pathDic = '/media/phongnve/HDD/source_bkav/dictionary_csv'
 pathDicCsv = "/media/phongnve/HDD/source_bkav/dict_csv/"
+pathFolderDic = '/media/phongnve/HDD/source_bkav/dict_csv/main/main/'
 globalCounters = 0
 chunkSize = 10000
 UNIGRAM = []
@@ -59,7 +60,19 @@ def _merge_dict_csv(s):
     dk.to_csv(pathMainDict, index=None, header=False)
 
 def _tool_match_key(name):
-    pathMainDict = '/media/phongnve/HDD/source_bkav/dict_csv/main/main/'+name
+    pathMainDict = pathFolderDic+name
+    print(pathMainDict)
+    col = ['key','type','prev_array','count','f']
+    main_dict = pd.read_csv(pathMainDict, names=col, low_memory=False)
+    main_dict = main_dict.fillna("0")
+    main_dict['key'] = main_dict.apply(lambda x: str(x['key']).lower() , axis=1)
+    main_dict['prev_array'] = main_dict.apply(lambda x: str(x['prev_array']).lower(), axis=1)
+    main_dict = main_dict.fillna("0").groupby(['key','type','prev_array']).agg({'count': "sum"}).reset_index()
+    main_dict['f'] = 0
+    # main_dict = main_dict[main_dict['count'] > 0]
+    main_dict.to_csv(pathMainDict, index=False, header=False)
+
+def _tool_match_key_with_path(pathMainDict):
     print(pathMainDict)
     col = ['key','type','prev_array','count','f']
     main_dict = pd.read_csv(pathMainDict, names=col, low_memory=False)
@@ -72,7 +85,7 @@ def _tool_match_key(name):
     main_dict.to_csv(pathMainDict, index=False, header=False)
 
 def _tool_text_to_csv():
-    for x in range(1,29):
+    for x in range(29,32):
         if x <= 9:
             s = "0" + str(x) + folder
         else:
@@ -88,6 +101,19 @@ def _tool_text_to_csv():
         for file in os.listdir(pathText):
             readFile._file_to_csv(pathText+file,file,folder,s)
 
+def _tool_group_by_key():
+    for x in range(30,32):
+        if x <= 9:
+            s = "0" + str(x) + folder
+        else:
+            s = str(x) + folder
+        pathDic = pathDicCsv + folder + "/" + s
+        print(pathDic)
+        for file in os.listdir(pathDic):
+            _tool_match_key_with_path(pathDic+"/"+file)
+            # readFile._file_to_csv(pathText+file,file,folder,s)
+    print("DONE")
+
 def _tool_merge_csv():
     for x in range(1,29):
         if x <= 9:
@@ -98,11 +124,11 @@ def _tool_merge_csv():
 
 def _tool_reduce_file(name1,name2,name3):
     # file dic so sanh
-    pathMainDict1 = '/media/phongnve/HDD/source_bkav/dict_csv/main/main/'+name1
+    pathMainDict1 = pathFolderDic+name1
     # file dict ghep
-    pathMainDict2 = '/media/phongnve/HDD/source_bkav/dict_csv/main/main/'+name2
+    pathMainDict2 = pathFolderDic+name2
     # file tao moi
-    pathMainDict3 = '/media/phongnve/HDD/source_bkav/dict_csv/main/main/'+name3
+    pathMainDict3 = pathFolderDic+name3
     print(pathMainDict1)
     col = ['key','type','prev_array','count','f']
     df = pd.read_csv(pathMainDict1, names=col, low_memory=False)
@@ -117,7 +143,7 @@ def _tool_reduce_file(name1,name2,name3):
         out.to_csv(pathMainDict3, mode="a", index=False, header=False)
     print("DONE")
 
-readFile._file_to_csv('test.txt.txt',"main_dict_current","main","main")
+readFile._file_to_csv('main_vi.dict_c.txt',"main_dict_current1","main","main")
 
 # Chuyen file text thanh file csv
 # _tool_text_to_csv()
@@ -125,6 +151,7 @@ readFile._file_to_csv('test.txt.txt',"main_dict_current","main","main")
 # _tool_merge_csv()
 
 # Ghep cac tuwf gioong nhau trong file dic csv
+_tool_group_by_key();
 # _tool_match_key("main_dict_current.csv")
 # _tool_match_key("main_dict_current_0.csv")
 # _tool_match_key("main_dict_current_1.csv")

@@ -124,13 +124,13 @@ def _dic_to_text(name,file):
 # _get_probability_for_dict("main_dict_3.csv","main_dict_2.csv",1)
 
 # VIet ra file text
-# _dic_to_text("word_uni_prob.txt","main_dict_0.csv")
-# _dic_to_text("word_bi_prob.txt","main_dict_1.csv")
-# _dic_to_text("word_tri_prob.txt","main_dict_2.csv")
-# _dic_to_text("word_quad_prob.txt","main_dict_3.csv")
+_dic_to_text("word_uni_prob.txt","main_dict_0_checked.csv")
+_dic_to_text("word_bi_prob.txt","main_dict_1_checked.csv")
+_dic_to_text("word_tri_prob.txt","main_dict_2_checked.csv")
+_dic_to_text("word_quad_prob.txt","main_dict_3_checked.csv")
 
 # Ghep xac xuat 2 tu dien
-_merge_pro("main_dict_current_0.csv","main_dict_0.csv","main_dict_current_uni.csv")
-_merge_pro("main_dict_current_1.csv","main_dict_1.csv","main_dict_current_bi.csv")
-_merge_pro("main_dict_current_2.csv","main_dict_2.csv","main_dict_current_tri.csv")
-_merge_pro("main_dict_current_3.csv","main_dict_3.csv","main_dict_current_quad.csv")
+# _merge_pro("main_dict_current_0.csv","main_dict_0.csv","main_dict_current_uni.csv")
+# _merge_pro("main_dict_current_1.csv","main_dict_1.csv","main_dict_current_bi.csv")
+# _merge_pro("main_dict_current_2.csv","main_dict_2.csv","main_dict_current_tri.csv")
+# _merge_pro("main_dict_current_3.csv","main_dict_3.csv","main_dict_current_quad.csv")

@@ -58,9 +58,10 @@ def _tool_pro(fol):
     for t in threads:
         t.join()
 
-# _tool_check_in_word("main_dict_0.csv","main_dict_0_checked.csv")
-# _tool_check_in_word("main_dict_1.csv","main_dict_1_checked.csv")
-# _tool_check_in_word("main_dict_2.csv","main_dict_2_checked.csv")
-# _tool_check_in_word("main_dict_3.csv","main_dict_3_checked.csv")
+# Tool loc theo file word.txt (file tieng viet uni)
+# _tool_check_in_word("main_dict_current_0.csv","main_dict_0_checked.csv")
+# _tool_check_in_word("main_dict_current_1.csv","main_dict_1_checked.csv")
+# _tool_check_in_word("main_dict_current_2.csv","main_dict_2_checked.csv")
+# _tool_check_in_word("main_dict_current_3.csv","main_dict_3_checked.csv")
 
 # _tool_pro("bi")
